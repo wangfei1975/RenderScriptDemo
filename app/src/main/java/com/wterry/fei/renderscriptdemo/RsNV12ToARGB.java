@@ -26,10 +26,10 @@ public class RsNV12ToARGB {
         mWidth = width;
         mHeight = height;
 
-        Type typeDst = new Type.Builder(mRS, Element.U8(mRS)).setX(width).setY(height * 3 / 2).create();
-        mIn = Allocation.createTyped(mRS, typeDst, Allocation.USAGE_SCRIPT);
+      //  Type typeDst = new Type.Builder(mRS, Element.U8(mRS)).setX(width).setY(height * 3 / 2).create();
+      //  mIn = Allocation.createTyped(mRS, typeDst, Allocation.USAGE_SCRIPT);
 
-      //  mIn = Allocation.createSized(mRS, Element.U8(mRS), width * height * 3/2, Allocation.USAGE_SCRIPT);
+        mIn = Allocation.createSized(mRS, Element.U8(mRS), width * height * 3/2, Allocation.USAGE_SCRIPT);
         mOffsetY = Allocation.createSized(mRS, Element.I32(mRS),  height * 3/2, Allocation.USAGE_SCRIPT);
 
         mScript.bind_src(mIn);
@@ -47,6 +47,7 @@ public class RsNV12ToARGB {
         mIn.copyFrom(nv12);
         Allocation out = Allocation.createFromBitmap(mRS, bmp);
         mScript.forEach_convert(out);
+        out.copyTo(bmp);
         return bmp;
     }
 
