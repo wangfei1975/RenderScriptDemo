@@ -39,6 +39,8 @@
             android:name=".FilterSelectorActivity"
             android:label="@string/title_activity_filter_selector" >
         </activity>
+        <activity android:name=".DemoVideoPostProcessingActivity" >
+        </activity>
     </application>
 
 </manifest>

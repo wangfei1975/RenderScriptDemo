@@ -33,4 +33,11 @@
         android:text="@string/demoNV12BlitBitmap"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/but_demo_VideoPostProcessing"
+        android:layout_below="@+id/but_demo_NV12ImageProcessor"
+        android:text="@string/demoVideoPostProcessing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 </RelativeLayout>

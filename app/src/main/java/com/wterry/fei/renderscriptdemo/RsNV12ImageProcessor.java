@@ -232,7 +232,11 @@ public final class RsNV12ImageProcessor {
         mOut.copyTo(out.getData());
         return out;
     }
-
+    Allocation pipeProcess(final NV12Image in) {
+        mIn.copyFrom(in.getData());
+        process();
+        return mOut;
+    }
     public void destroy() {
         mIn.destroy();
         mOut.destroy();

@@ -3,6 +3,7 @@ package com.wterry.fei.renderscriptdemo;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.RectF;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,6 +74,27 @@ public class Utils {
     }
     public static Bitmap NV12ToBitmap(final byte [] buf, final int w, final int h) {
         return Bitmap.createBitmap(NV12ToARGB(buf, w, h), w, h, Bitmap.Config.ARGB_8888);
+    }
+
+    static public int align16(final int v) {
+        return (v + 0x0F) & (~0x0F);
+    }
+
+    static public int align64(final int v) {
+        return (v + 0x3F) & (~0x3F);
+    }
+
+    static RectF rotateRectF(RectF r, int rot) {
+        switch(rot%360) {
+            case 90:
+                return new RectF(r.bottom, r.left, r.top, r.right);
+            case 180:
+                return new RectF(r.right, r.bottom, r.left, r.top);
+            case 270:
+                return new RectF(r.top, r.right, r.bottom, r.left);
+            default:
+                return new RectF(r);
+        }
     }
 
 }

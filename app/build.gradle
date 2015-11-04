@@ -6,13 +6,13 @@ android {
 
     defaultConfig {
         applicationId "com.wterry.fei.renderscriptdemo"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
 
 
-        renderscriptTargetApi 16
+        renderscriptTargetApi 19
         renderscriptSupportModeEnabled true
     }
     buildTypes {

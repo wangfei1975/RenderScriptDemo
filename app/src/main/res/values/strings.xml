@@ -5,6 +5,7 @@
     <string name="demoARGBToNV12">Demo ARGB to NV12</string>
     <string name="demoNV12ImageProcessor">Demo NV12 Image Processor</string>
     <string name="demoNV12BlitBitmap">Demo NV12 Blit Bitmap</string>
+    <string name="demoVideoPostProcessing">Demo Video Post Processing</string>
 
     <string name="action_settings">Settings</string>
     <string name="title_activity_demo_nv12_to_argb">DemoNV12ToARGB</string>

@@ -8,7 +8,7 @@ import android.support.v8.renderscript.Script;
 import android.support.v8.renderscript.Type;
 
 /**
- * Created by feiwang on 15-03-09.
+ * Created by feiwang on 15-10-09.
  */
 public class RsNV12ToARGB {
     final ScriptC_NV12ToARGB mScript;
@@ -26,9 +26,8 @@ public class RsNV12ToARGB {
         mWidth = width;
         mHeight = height;
 
-      //  Type typeDst = new Type.Builder(mRS, Element.U8(mRS)).setX(width).setY(height * 3 / 2).create();
-      //  mIn = Allocation.createTyped(mRS, typeDst, Allocation.USAGE_SCRIPT);
-
+        // Type typeDst = new Type.Builder(mRS, Element.U8(mRS)).setX(width).setY(height * 3 / 2).create();
+        // mIn = Allocation.createTyped(mRS, typeDst, Allocation.USAGE_SCRIPT);
         mIn = Allocation.createSized(mRS, Element.U8(mRS), width * height * 3/2, Allocation.USAGE_SCRIPT);
         mOffsetY = Allocation.createSized(mRS, Element.I32(mRS),  height * 3/2, Allocation.USAGE_SCRIPT);
 
@@ -39,10 +38,23 @@ public class RsNV12ToARGB {
     }
 
     public Bitmap convert(final byte [] nv12) {
-     //   int w = ((mWidth + 3) & (~3));
+        //   int w = ((mWidth + 3) & (~3));
         return convert(Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888), nv12);
     }
 
+    public Bitmap convert1d(Bitmap bmp, Allocation in) {
+        mScript.bind_src(in);
+        Allocation out = Allocation.createFromBitmap(mRS, bmp);
+        mScript.forEach_convert(out);
+        return bmp;
+    }
+    public Bitmap convert(Bitmap bmp, Allocation in) {
+        mScript.set_src_2d(in);
+        Allocation out = Allocation.createFromBitmap(mRS, bmp);
+        mScript.forEach_convert2d(out);
+        out.copyTo(bmp);
+        return bmp;
+    }
     public Bitmap convert(Bitmap bmp, final byte []nv12) {
         mIn.copyFrom(nv12);
         Allocation out = Allocation.createFromBitmap(mRS, bmp);

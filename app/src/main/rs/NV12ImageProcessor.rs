@@ -1,6 +1,6 @@
 
 #pragma version(1)
-#pragma rs java_package_name(com.wterry.fei.renderscriptdemo1)
+#pragma rs java_package_name(com.wterry.fei.renderscriptdemo)
 
 #include "common.rs"
 

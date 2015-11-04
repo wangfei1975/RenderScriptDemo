@@ -10,6 +10,7 @@
 #include "common.rs"
 
 
+rs_allocation src_2d;
 uchar * src;
 
 static int width;
@@ -52,4 +53,13 @@ uchar4 __attribute__((kernel)) convert(int x, int y) {
     uchar U = src[uvoffset];
     uchar V = src[uvoffset+1];
     return YUVToARGB(src[offset_y[y]+x], U, V);
+}
+
+uchar4 __attribute__((kernel)) convert2d(int x, int y) {
+    int ux = x&(~1);
+    int uy = height + (y>>1);
+    int Y = rsGetElementAt_uchar(src_2d, x, y);
+    int U = rsGetElementAt_uchar(src_2d, ux, uy);
+    int V = rsGetElementAt_uchar(src_2d, ux+1, uy);
+    return YUVToARGB(Y, U, V);
 }

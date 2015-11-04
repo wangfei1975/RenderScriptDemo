@@ -44,6 +44,14 @@ public class MainActivity extends ActionBarActivity {
                 startActivity(i);
             }
         });
+
+        this.findViewById(R.id.but_demo_VideoPostProcessing).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MainActivity.this, DemoVideoPostProcessingActivity.class);
+                startActivity(i);
+            }
+        });
 /*
         byte []jpgd = Utils.loadRawResource(this, R.raw.tttt);
 
