@@ -17,4 +17,20 @@
        android:layout_width="320dp"
        android:layout_height="180dp" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/imageView"
+        android:id="@+id/but_testrs"
+        android:text="test RS Performance"
+        />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/imageView"
+        android:layout_toRightOf="@id/but_testrs"
+        android:id="@+id/but_testsoftware"
+        android:text="test SW Performance"
+        />
+
 </RelativeLayout>

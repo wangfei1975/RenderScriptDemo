@@ -51,8 +51,7 @@ public class Utils {
         return Color.argb(255, r, g, b);
     }
 
-    static int [] NV12ToARGB(final byte[] yuv, final int w, final int h) {
-        int [] out = new int[w * h];
+    static int [] NV12ToARGB(final byte[] yuv, final int [] out, final int w, final int h) {
         int yOffset = 0;
         int uvOffset = w * h;
         for (int r = 0; r < h; r++) {
@@ -71,6 +70,9 @@ public class Utils {
             }
         }
         return out;
+    }
+    static int [] NV12ToARGB(final byte[] yuv, final int w, final int h) {
+        return NV12ToARGB(yuv, new int[w * h], w, h);
     }
     public static Bitmap NV12ToBitmap(final byte [] buf, final int w, final int h) {
         return Bitmap.createBitmap(NV12ToARGB(buf, w, h), w, h, Bitmap.Config.ARGB_8888);

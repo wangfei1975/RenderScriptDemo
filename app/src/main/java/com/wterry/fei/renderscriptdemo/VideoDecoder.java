@@ -139,6 +139,12 @@ public class VideoDecoder {
 
     final LinkedBlockingQueue<Integer> mBufQueue = new LinkedBlockingQueue<Integer>();
 
+    Bitmap mWaterMark;
+
+    public void setWaterMark(Bitmap waterMark) {
+        mWaterMark = waterMark;
+    }
+
 //    byte [] tmp = new byte[1280*720*3/2];
     public void releaseOutputBuffer(int index, boolean render) {
 
@@ -172,7 +178,14 @@ public class VideoDecoder {
                         if (b != null) {
                             b.get(mNV12Image.mData, 0, mNV12Image.mData.length);
                             b.rewind();
+
+                            if (mWaterMark != null) {
+                                mNV12Image.blit(mRS, mWaterMark, 70, 70);
+                            }
+
                             Allocation out = mProcessor.pipeProcess(mNV12Image);
+
+
                             mConverter.convert(mBitmap, out);
                             try {
                                 Canvas c = mSurface.lockCanvas(null);

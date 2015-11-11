@@ -1,6 +1,9 @@
 package com.wterry.fei.renderscriptdemo;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
 import android.net.Uri;
@@ -36,6 +39,7 @@ public class DemoVideoPostProcessingActivity extends ActionBarActivity {
         mPreview.setLayoutParams(lp);
     }
     static final Uri mVideoUri = Uri.parse("android.resource://com.wterry.fei.renderscriptdemo/" + R.raw.bunny720p);
+    Bitmap mWaterMark;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +62,16 @@ public class DemoVideoPostProcessingActivity extends ActionBarActivity {
         adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner1.setAdapter(adapter1);
 
+
+
+        mWaterMark = Bitmap.createBitmap(880, 100, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(mWaterMark);
+        c.drawARGB(70, 0, 0, 0);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(Color.rgb(255, 20, 20));
+        paint.setTextSize(80);
+        paint.setStyle(Paint.Style.FILL);
+        c.drawText("Water mark demo", 10, 80, paint);
 
         findViewById(R.id.but_play).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,6 +103,7 @@ public class DemoVideoPostProcessingActivity extends ActionBarActivity {
                             } else if (mir.equals("Flip Vertical")) {
                                 nmir = 2;
                             }
+                            decoder.setWaterMark(mWaterMark);
                             decoder.setUserCrop(mCropSelector.getUserCrop());
                             decoder.setMirror(nmir);
                             decoder.setUserRotation(nrot);
