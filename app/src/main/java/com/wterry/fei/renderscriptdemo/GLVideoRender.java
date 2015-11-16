@@ -2,6 +2,7 @@ package com.wterry.fei.renderscriptdemo;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -15,6 +16,8 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -22,21 +25,31 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Created by linlin on 15-11-13.
  */
-public class GLNV12View  extends  GLTextureView implements GLTextureView.Renderer {
+public class GLVideoRender extends  GLTextureView implements GLTextureView.Renderer {
 
-    static final String TAG = GLNV12View.class.getSimpleName();
-    public final int mVideoWidth;// = 1280;
-    public final int mVideoHeight;// = 720;
+    public interface Listener {
+        void onSurfaceCreated(SurfaceTexture surface, int width, int height);
+        void onSurfaceDestroyed(SurfaceTexture surface);
+    }
 
-    private final int mYSize;// = mVideoWidth*mVideoHeight;
-    private final int mUVSize;// = mYSize / 2;
+    public interface RenderListener {
+        void onRenderComplete(int index);
+    }
 
 
+
+    static final String TAG = GLVideoRender.class.getSimpleName();
+    private int mVideoWidth;// = 1280;
+    private int mVideoHeight;// = 720;
+
+    private int mYSize;// = mVideoWidth*mVideoHeight;
+    private int mUVSize;// = mYSize / 2;
+
+
+    Listener mListener;
 
     private int[] yTextureNames;
     private int[] uvTextureNames;
-
-
 
     private FloatBuffer mVertices;
     private ShortBuffer mIndices;
@@ -70,16 +83,17 @@ public class GLNV12View  extends  GLTextureView implements GLTextureView.Rendere
 
 
 
+    public void setListener(Listener lis) {
+        mListener = lis;
+    }
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         GLES20.glActiveTexture(GLES20.GL_ACTIVE_TEXTURE);
         GLES20.glViewport(0, 0, width, height);
     }
 
-    @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        // Log.d("debug", "on surface created");
-        // Define a simple shader program for our point.
+
+    public void loadAll() {
         final String vShaderStr = readTextFileFromRawResource(getContext(), R.raw.vertex_shader);
         final String fShaderStr = readTextFileFromRawResource(getContext(), R.raw.fragement_shader);
         frameBuffer = IntBuffer.allocate(1);
@@ -127,11 +141,75 @@ public class GLNV12View  extends  GLTextureView implements GLTextureView.Rendere
         int uTextureName = uvTextureNames[0];
 
         GLES20.glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+
+    }
+    @Override
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        // Log.d("debug", "on surface created");
+        // Define a simple shader program for our point.
+       loadAll();
+        if (mListener != null) {
+            mListener.onSurfaceCreated(getSurfaceTexture(), getWidth(), getHeight());
+        }
+    }
+
+    static class RenderBufferContext {
+        final int mIndex;
+        final ByteBuffer mBuffer;
+        final RenderListener mListener;
+        RenderBufferContext(int index, ByteBuffer b, RenderListener l) {
+            mIndex = index;
+            mBuffer = b;
+            mListener = l;
+        }
+    }
+
+    final LinkedBlockingQueue<RenderBufferContext> mBufQueue = new LinkedBlockingQueue<RenderBufferContext>();
+    public void renderBuffer(int index, ByteBuffer buffer, RenderListener listener) {
+        try {
+            mBufQueue.put(new RenderBufferContext(index, buffer, listener));
+            requestRender();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
     public final void onDrawFrame(GL10 gl) {
         Log.d("debug", "on Draw frame");
+        if (!mBufQueue.isEmpty()) {
+
+        RenderBufferContext rc;
+        try {
+             rc = mBufQueue.take();
+            if (rc == null) {
+                return;
+            }
+            ByteBuffer b = rc.mBuffer;
+            if (b == null) {
+                return;
+            }
+
+                b.position(0);
+                b.limit(mYSize);
+                yBuffer.put(b);
+                yBuffer.position(0);
+                b.limit(mYSize + mUVSize);
+                b.position(mYSize);
+                uvBuffer.put(b);
+                uvBuffer.position(0);
+                b.position(0);
+
+            if (rc != null && rc.mListener != null) {
+                rc.mListener.onRenderComplete(rc.mIndex);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        }
+
         // Clear the color buffer
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
@@ -161,7 +239,7 @@ public class GLNV12View  extends  GLTextureView implements GLTextureView.Rendere
 
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, uvTextureNames[0]);
         GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE_ALPHA,
-                mVideoWidth/2, mVideoHeight/2, 0, GLES20.GL_LUMINANCE_ALPHA, GLES20.GL_UNSIGNED_BYTE, uvBuffer);
+                mVideoWidth / 2, mVideoHeight / 2, 0, GLES20.GL_LUMINANCE_ALPHA, GLES20.GL_UNSIGNED_BYTE, uvBuffer);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
@@ -171,11 +249,15 @@ public class GLNV12View  extends  GLTextureView implements GLTextureView.Rendere
         GLES20.glUniform1i(uvTexture, 1);
 
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, 6, GLES20.GL_UNSIGNED_SHORT, mIndices);
+
+
     }
 
     @Override
     public void onSurfaceDestroyed(GL10 gl) {
-
+        if (mListener != null) {
+            mListener.onSurfaceDestroyed(getSurfaceTexture());
+        }
     }
 
 
@@ -271,55 +353,39 @@ public class GLNV12View  extends  GLTextureView implements GLTextureView.Rendere
         return programObject;
     }
 
-    //@Override
-    public void setData(byte[] data) {
-        yBuffer.put(data, 0, mYSize);
-        uvBuffer.put(data, mYSize, mUVSize);
-        yBuffer.position(0);
-        uvBuffer.position(0);
 
+    public void setVideoSize(int w, int h) {
+        mVideoWidth = w;
+        mVideoHeight = h;
+        init();
     }
-
-    public GLNV12View(Context context) {
-        super(context);
-        mVideoWidth = 1280;
-        mVideoHeight = 720;
+    private void init() {
+        setEGLContextClientVersion(2);
         mYSize = mVideoWidth*mVideoHeight;
         mUVSize = mYSize / 2;
 
+        mVertices = ByteBuffer.allocateDirect(mVerticesData.length * 4)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        mVertices.put(mVerticesData).position(0);
+
+        mIndices = ByteBuffer.allocateDirect(mIndicesData.length * 2)
+                .order(ByteOrder.nativeOrder()).asShortBuffer();
+        mIndices.put(mIndicesData).position(0);
+
+        yBuffer = ByteBuffer.allocateDirect(mYSize);
+        uvBuffer = ByteBuffer.allocateDirect(mUVSize);
+
+        setRenderer(this);
+        setRenderMode(GLTextureView.RENDERMODE_WHEN_DIRTY);
+    }
+    public GLVideoRender(Context context) {
+        super(context);
     }
 
 
-    public GLNV12View(Context context, AttributeSet attrs) {
+    public GLVideoRender(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setEGLContextClientVersion(2);
 
-        TypedArray a = context.getTheme().obtainStyledAttributes(
-                attrs,
-                R.styleable.GLNV12View,
-                0, 0);
-        try {
-            mVideoWidth =  a.getResourceId(R.styleable.GLNV12View_video_width, 1280);
-            mVideoHeight = a.getResourceId(R.styleable.GLNV12View_video_height, 720);
-            mYSize = mVideoWidth*mVideoHeight;
-            mUVSize = mYSize / 2;
- 
-            mVertices = ByteBuffer.allocateDirect(mVerticesData.length * 4)
-                    .order(ByteOrder.nativeOrder()).asFloatBuffer();
-            mVertices.put(mVerticesData).position(0);
-
-            mIndices = ByteBuffer.allocateDirect(mIndicesData.length * 2)
-                    .order(ByteOrder.nativeOrder()).asShortBuffer();
-            mIndices.put(mIndicesData).position(0);
-
-            yBuffer = ByteBuffer.allocateDirect(mYSize);
-            uvBuffer = ByteBuffer.allocateDirect(mUVSize);
-
-            setRenderer(this);
-            setRenderMode(GLTextureView.RENDERMODE_WHEN_DIRTY);
-        } finally {
-            a.recycle();
-        }
     }
 
 

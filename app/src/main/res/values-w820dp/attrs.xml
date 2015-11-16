@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="GLNV12View">
+    <declare-styleable name="GLVideoRender">
         <attr name="video_width" format="integer"/>
         <attr name="video_height" format="integer"/>
     </declare-styleable>

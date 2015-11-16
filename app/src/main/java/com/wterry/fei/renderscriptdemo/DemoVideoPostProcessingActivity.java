@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.support.v8.renderscript.RenderScript;
 import android.util.Log;
 import android.view.Surface;
-import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -24,7 +23,7 @@ import java.io.IOException;
 public class DemoVideoPostProcessingActivity extends ActionBarActivity {
 
     static final String TAG = DemoVideoPostProcessingActivity.class.getSimpleName();
-    private VideoView mPreview;
+    private GLVideoRender mPreview;
     private VideoDecoder mDecoder;
     private SurfaceTexture mSurfaceTexture;
     private RenderScript rs ;
@@ -45,7 +44,7 @@ public class DemoVideoPostProcessingActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_demo_video_post_processing);
 
-        mPreview = (VideoView) findViewById(R.id.videoView);
+        mPreview = (GLVideoRender) findViewById(R.id.videoView);
         mCropSelector = (CropSelectorView) findViewById(R.id.cropSelectorView);
         mCropSelector.bringToFront();
 
@@ -77,14 +76,13 @@ public class DemoVideoPostProcessingActivity extends ActionBarActivity {
             @Override
             public void onClick(View v) {
 
-                final String rot = (String)((Spinner) findViewById(R.id.rotation_spinner)).getSelectedItem();
-                final String mir = (String)((Spinner) findViewById(R.id.mirror_spinner)).getSelectedItem();
-
+                final String rot = (String) ((Spinner) findViewById(R.id.rotation_spinner)).getSelectedItem();
+                final String mir = (String) ((Spinner) findViewById(R.id.mirror_spinner)).getSelectedItem();
 
 
                 mCropSelector.setVisibility(View.GONE);
                 mPreview.bringToFront();
-                final VideoDecoder decoder = new VideoDecoder(rs, mSurfaceTexture, mSurfaceWidth, mSurfaceHeight);
+                final VideoDecoder decoder = new VideoDecoder(rs, mPreview, mSurfaceWidth, mSurfaceHeight);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -109,7 +107,7 @@ public class DemoVideoPostProcessingActivity extends ActionBarActivity {
                             decoder.setUserRotation(nrot);
                             decoder.setDataSource(DemoVideoPostProcessingActivity.this, mVideoUri);
                             MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-                            while(mSurfaceTexture != null ) {
+                            while (mSurfaceTexture != null) {
                                 int idx = decoder.dequeueOutputBuffer(0, info);
                                 if (idx >= 0) {
                                     decoder.releaseOutputBuffer(idx, mSurfaceTexture != null);
@@ -130,21 +128,32 @@ public class DemoVideoPostProcessingActivity extends ActionBarActivity {
             }
         });
 
-        mPreview.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+        mPreview.setVideoSize(1280, 720);
+        mPreview.setListener(new GLVideoRender.Listener() {
             @Override
-            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+            public void onSurfaceCreated(SurfaceTexture surface, final int width, final int height) {
 
                 mSurfaceTexture = surface;
                 //  mSurface = new Surface(surface);
                 mSurfaceWidth = width;
                 mSurfaceHeight = height;
-                ViewGroup.LayoutParams lp = mCropSelector.getLayoutParams();
-                lp.width = width;
-                lp.height = height;
-                mCropSelector.setLayoutParams(lp);
+                DemoVideoPostProcessingActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
 
-                // mVideoEditView.setLayoutParams(new RelativeLayout.LayoutParams(width, height));
-                initDecoder();
+                        ViewGroup.LayoutParams lp = mCropSelector.getLayoutParams();
+                        lp.width = width;
+                        lp.height = height;
+
+                        mCropSelector.setLayoutParams(lp);
+
+
+                        // mVideoEditView.setLayoutParams(new RelativeLayout.LayoutParams(width, height));
+                        initDecoder();
+                    }
+                });
+
+
 
 
 
@@ -189,6 +198,11 @@ public class DemoVideoPostProcessingActivity extends ActionBarActivity {
             }
 
             @Override
+            public void onSurfaceDestroyed(SurfaceTexture surface) {
+
+            }
+/*
+            @Override
             public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
                 mSurfaceTexture = surface;
                 //   mSurface = new Surface(surface);
@@ -211,7 +225,9 @@ public class DemoVideoPostProcessingActivity extends ActionBarActivity {
                 //  mSurfaceTexture = surface;
 
             }
+             */
         });
+
     }
 
     private void initDecoder() {
@@ -219,62 +235,69 @@ public class DemoVideoPostProcessingActivity extends ActionBarActivity {
         if (rs == null) {
             rs = RenderScript.create(this);
         }
-        mDecoder = new VideoDecoder(rs, mSurfaceTexture, mSurfaceWidth, mSurfaceHeight);
+        mDecoder = new VideoDecoder(rs, mPreview, mSurfaceWidth, mSurfaceHeight);
+
 
         //final Bitmap bmp  = BitmapFactory.decodeResource(VideoEditActivity.this.getResources(), R.drawable.editor_icon_draw_press);
+        try {
+            mDecoder.setDataSource(DemoVideoPostProcessingActivity.this, mVideoUri);
+            final Bitmap bb = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888);
+            mDecoder.getThumbnail(bb, 2000000L);
+           // int w = mDecoder.getRenderRect().width();
+           // int h = mDecoder.getRenderRect().height();
+          //  ViewGroup.LayoutParams lp = new   ViewGroup.LayoutParams(w, h);
+           // mPreview.setLayoutParams(lp);
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
 
 
         new Thread(new Runnable(){
             @Override
             public void run() {
-                try {
-                    mDecoder.setDataSource(DemoVideoPostProcessingActivity.this,  mVideoUri);
-                    final Surface sur = mDecoder.getSurface();
-
-             final Bitmap bb = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888);
-                     mDecoder.getThumbnail(bb, 2000000L);
-
-                    mCropSelector.setVideoRect(mDecoder.getRenderRect());
-
-                    mDecoder.seekTo(0, false);
 
 
-                    long dur = mDecoder.getDuration();
+                mCropSelector.setVideoRect(mDecoder.getRenderRect());
 
-                    long start = System.currentTimeMillis();
-                    Log.i(TAG, "decode start  " + start);
-                    while(mSurfaceTexture != null ) {
+                mDecoder.seekTo(0, false);
 
-                        int idx = mDecoder.dequeueOutputBuffer(0, info);
-                        if (idx >= 0) {
-                            Log.v(TAG, "render buffer :" + idx);
-                            mDecoder.releaseOutputBuffer(idx, mSurfaceTexture != null);
 
-                            //  if (info.presentationTimeUs >= 8000000L) {
+                long dur = mDecoder.getDuration();
 
-                            //    break;
-                            // }
+                long start = System.currentTimeMillis();
+                Log.i(TAG, "decode start  " + start);
+                while (mSurfaceTexture != null) {
 
-                            if (info.presentationTimeUs > 0) {
-                               // mSeekBar.setProgress((int)(info.presentationTimeUs/1000000L));
-                            }
+                    int idx = mDecoder.dequeueOutputBuffer(0, info);
+                    if (idx >= 0) {
+                        Log.v(TAG, "render buffer :" + idx);
+                        mDecoder.releaseOutputBuffer(idx, mSurfaceTexture != null);
 
-                        }
+                        //  if (info.presentationTimeUs >= 8000000L) {
 
-                        if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                            Log.i(TAG, "end of stream");
-                            break;
+                        //    break;
+                        // }
+
+                        if (info.presentationTimeUs > 0) {
+                            // mSeekBar.setProgress((int)(info.presentationTimeUs/1000000L));
                         }
 
                     }
 
+                    if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                        Log.i(TAG, "end of stream");
+                        break;
+                    }
+
+
                     Log.i(TAG, "decode end dur  " + (System.currentTimeMillis() - start));
-                    mDecoder.stop();
-                  //  mSeekBar.setProgress(mSeekBar.getMax());
+                    //    mDecoder.stop();
+                    //  mSeekBar.setProgress(mSeekBar.getMax());
 
-
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
             }
         }).start();
