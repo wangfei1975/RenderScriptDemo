@@ -102,9 +102,9 @@ public class VideoDecoder {
         if (pos >= mDuration) {
             pos = mDuration - 50000;
         }
-        mExtractor.seekTo(pos, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
+     //   mExtractor.seekTo(pos, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
 
-        mDecoder.flush();
+      //  mDecoder.flush();
 
         int idx = -1;
         ByteBuffer buffer = null;
@@ -279,7 +279,11 @@ public class VideoDecoder {
                 mDecoder.queueInputBuffer(inIndex, 0, sampleSize, sampleTime, 0);
                 mExtractor.advance();
             }
-            inIndex = mDecoder.dequeueInputBuffer(0);
+            try {
+                inIndex = mDecoder.dequeueInputBuffer(0);
+            }catch (IllegalStateException e) {
+                break;
+            }
         }
     }
 
@@ -549,7 +553,7 @@ public class VideoDecoder {
                 Log.i(TAG, "Video format: " + format);
                 mInputFormat = format;
                 //TODO enumlate decoder output format and select prefered
-               // format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar);
+                // format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar);
                 mDecoder.configure(format, null, null, 0);
                 mVideoWidth = format.getInteger(MediaFormat.KEY_WIDTH);
                 mVideoHeight = format.getInteger(MediaFormat.KEY_HEIGHT);
@@ -561,6 +565,12 @@ public class VideoDecoder {
             throw new IOException("No video track found in the input " + uri);
         }
         mDecoder.start();
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         if (Build.VERSION.SDK_INT <= 20) {
             mInputBuffers = mDecoder.getInputBuffers();
             mOutputBuffers = mDecoder.getOutputBuffers();

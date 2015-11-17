@@ -4,6 +4,7 @@
 
     <string name="demoARGBToNV12">Demo ARGB to NV12</string>
     <string name="demoNV12ImageProcessor">Demo NV12 Image Processor</string>
+    <string name="demoNV12ImageJoint">Demo NV12 Image Joint</string>
     <string name="demoNV12BlitBitmap">Demo NV12 Blit Bitmap</string>
     <string name="demoVideoPostProcessing">Demo Video Post Processing</string>
 

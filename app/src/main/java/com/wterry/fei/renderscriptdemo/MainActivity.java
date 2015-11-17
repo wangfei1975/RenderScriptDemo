@@ -30,6 +30,14 @@ public class MainActivity extends ActionBarActivity {
                 startActivity(i);
             }
         });
+        this.findViewById(R.id.but_demo_NV12ImageJoint).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MainActivity.this, DemoNV12ImageJointActivity.class);
+                startActivity(i);
+            }
+        });
+
         this.findViewById(R.id.but_demo_NV12ImageProcessor).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

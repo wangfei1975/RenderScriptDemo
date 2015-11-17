@@ -1,6 +1,7 @@
 package com.wterry.fei.renderscriptdemo;
 
 import android.graphics.Bitmap;
+import android.renderscript.Allocation;
 import android.support.v8.renderscript.RenderScript;
 
 /**
@@ -57,4 +58,5 @@ public final class NV12Image {
     public NV12Image blit(final RenderScript rs, final Bitmap bmp, int left, int top) {
         return new RsARGBToNV12(rs, mWidth, mHeight, left, top).blit(this, bmp);
     }
+
 }
