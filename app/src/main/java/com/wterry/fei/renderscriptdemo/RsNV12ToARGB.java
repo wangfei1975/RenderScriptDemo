@@ -6,6 +6,7 @@ import android.support.v8.renderscript.Element;
 import android.support.v8.renderscript.RenderScript;
 import android.support.v8.renderscript.Script;
 import android.support.v8.renderscript.Type;
+import android.view.Surface;
 
 /**
  * Created by feiwang on 15-10-09.
@@ -61,6 +62,17 @@ public class RsNV12ToARGB {
         mScript.forEach_convert(out);
         out.copyTo(bmp);
         return bmp;
+    }
+
+    public void convert(final byte[]nv12, Surface sur) {
+        mIn.copyFrom(nv12);
+        Allocation out  = Allocation.createTyped(mRS,
+                new Type.Builder(mRS, Element.RGBA_8888(mRS))
+                        .setX(mWidth).setY(mHeight).create(),
+                Allocation.USAGE_IO_OUTPUT | Allocation.USAGE_SCRIPT);
+        out.setSurface(sur);
+        mScript.forEach_convert2d(out);
+        out.ioSend();
     }
 
     public void destroy() {

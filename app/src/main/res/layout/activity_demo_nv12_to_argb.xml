@@ -32,5 +32,10 @@
         android:id="@+id/but_testsoftware"
         android:text="test SW Performance"
         />
+    <SurfaceView
+        android:id="@+id/surface"
+        android:layout_below="@id/but_testrs"
+        android:layout_width="320dp"
+        android:layout_height="240dp" />
 
 </RelativeLayout>

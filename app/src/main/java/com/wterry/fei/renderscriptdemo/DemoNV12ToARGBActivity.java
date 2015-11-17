@@ -7,12 +7,15 @@ import android.os.Bundle;
 import android.support.v8.renderscript.RenderScript;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 
-public class DemoNV12ToARGBActivity extends ActionBarActivity {
+public class DemoNV12ToARGBActivity extends ActionBarActivity implements SurfaceHolder.Callback {
 
     static final int mWidth = 1280;
     static final int mHeight = 720;
@@ -37,6 +40,8 @@ public class DemoNV12ToARGBActivity extends ActionBarActivity {
                 testSoftwareConverter();
             }
         });
+
+        ((SurfaceView)findViewById(R.id.surface)).getHolder().addCallback(this);
     }
 
     public void testSoftwareConverter() {
@@ -105,5 +110,24 @@ public class DemoNV12ToARGBActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    Surface mSurface;
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        mSurface = holder.getSurface();
+      //  final byte [] nv12Data =  Utils.loadRawResource(this, R.raw.frame_720p);
+    //  final RsNV12ToARGB converter = new RsNV12ToARGB(RenderScript.create(this), mWidth, mHeight);
+    //   converter.convert(nv12Data, mSurface);
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        mSurface = holder.getSurface();
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+
     }
 }

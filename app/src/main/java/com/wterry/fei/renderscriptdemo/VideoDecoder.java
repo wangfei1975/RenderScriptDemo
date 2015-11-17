@@ -2,10 +2,8 @@ package com.wterry.fei.renderscriptdemo;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaExtractor;
@@ -14,7 +12,6 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
-import android.support.v8.renderscript.Allocation;
 import android.support.v8.renderscript.RenderScript;
 import android.util.Log;
 import android.view.Surface;
@@ -61,9 +58,12 @@ public class VideoDecoder {
     Bitmap mBitmap ;
     RsNV12ImageProcessor mProcessor;
 
-    VideoDecoder(RenderScript r, SurfaceTexture texture, int surfaceWidth, int surfaceHeight) {
+    GLVideoRender mNV12View;
+
+    VideoDecoder(RenderScript r, GLVideoRender texture, int surfaceWidth, int surfaceHeight) {
         if (texture != null) {
-            mSurface = new Surface(texture);
+            mNV12View = texture;
+            mSurface = new Surface(texture.getSurfaceTexture());
             mSurRect = new Rect(0, 0, surfaceWidth, surfaceHeight);
             Log.i(TAG, "Surface size: " + mSurRect.toString());
         }
@@ -137,7 +137,7 @@ public class VideoDecoder {
 
     boolean mRenderThread;
 
-    final LinkedBlockingQueue<Integer> mBufQueue = new LinkedBlockingQueue<Integer>();
+  //  final LinkedBlockingQueue<Integer> mBufQueue = new LinkedBlockingQueue<Integer>();
 
     Bitmap mWaterMark;
 
@@ -145,19 +145,46 @@ public class VideoDecoder {
         mWaterMark = waterMark;
     }
 
+    GLVideoRender.RenderListener mRenderListener = new GLVideoRender.RenderListener() {
+        @Override
+        public void onRenderComplete(int idx) {
+            mDecoder.releaseOutputBuffer(idx, false);
+        }
+    };
 //    byte [] tmp = new byte[1280*720*3/2];
-    public void releaseOutputBuffer(int index, boolean render) {
+    public void releaseOutputBuffer(final int index, boolean render) {
 
         if (mSurface == null || !render) {
-            mDecoder.releaseOutputBuffer(index, false);
+            try {
+                mDecoder.releaseOutputBuffer(index, false);
+            } catch (IllegalStateException e) {
+
+            }
             return;
         }
+        mNV12View.renderBuffer(index, getOutputBuffer(index), mRenderListener);
+     //   mNV12View.setData(this, index);
+/*
+        ByteBuffer b = getOutputBuffer(index);
+        b.get(mNV12Image.mData, 0, mNV12Image.mData.length);
 
+
+
+        mNV12View.requestRender();
+        b.rewind();
+        mDecoder.releaseOutputBuffer(index, false);
+        */
+
+//        mNV12View.bringToFront();
+
+
+      /*
         try {
             mBufQueue.put(index);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
 
         if (mRenderThread) {
             return;
@@ -207,7 +234,7 @@ public class VideoDecoder {
                 }
             }
         }).start();
-
+    */
 
     }
 
@@ -258,7 +285,11 @@ public class VideoDecoder {
             return null;
         } else {
             if (idx >= 0) {
-                return mDecoder.getOutputBuffer(idx);
+                try {
+                    return mDecoder.getOutputBuffer(idx);
+                } catch (IllegalStateException e) {
+                    return null;
+                }
             }
             return null;
         }
