@@ -1,0 +1,48 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
+
+    <Button
+        android:id="@+id/but_demo_NV12ToARGB"
+        android:text="@string/demoNV12ToARGB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+
+    <Button
+        android:id="@+id/but_demo_ARGBToNV12"
+        android:layout_below="@+id/but_demo_NV12ToARGB"
+        android:text="@string/demoARGBToNV12"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/but_demo_NV12ImageProcessor"
+        android:layout_below="@+id/but_demo_ARGBToNV12"
+        android:text="@string/demoNV12ImageProcessor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/but_demo_NV12ImageJoint"
+        android:layout_below="@+id/but_demo_NV12ImageProcessor"
+        android:text="@string/demoNV12ImageJoint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/but_demo_NV12BlitBitmap"
+        android:layout_below="@+id/but_demo_NV12ImageJoint"
+        android:text="@string/demoNV12BlitBitmap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/but_demo_VideoPostProcessing"
+        android:layout_below="@+id/but_demo_NV12BlitBitmap"
+        android:text="@string/demoVideoPostProcessing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+</RelativeLayout>
