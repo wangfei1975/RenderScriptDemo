@@ -1,4 +1,4 @@
-# MediaCodecRenderScript
+# RenderScriptDemo
 An Android project demonstrates how to use RenderScript to 
 
 1. Colorspace conversion(NV12=>ARGB, ARGB=>NV12) 
